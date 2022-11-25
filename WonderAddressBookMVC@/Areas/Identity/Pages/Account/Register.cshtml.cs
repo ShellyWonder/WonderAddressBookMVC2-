@@ -126,6 +126,8 @@ namespace WonderAddressBookMVC_.Areas.Identity.Pages.Account
             {
                 var user = CreateUser();
 
+                //await _userStore.SetUserNameAsync(user, Input.FirstName, CancellationToken.None);
+                //await _userStore.SetUserNameAsync(user, Input.LastName, CancellationToken.None);
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
                 var result = await _userManager.CreateAsync(user, Input.Password);
@@ -170,7 +172,10 @@ namespace WonderAddressBookMVC_.Areas.Identity.Pages.Account
         {
             try
             {
-                return Activator.CreateInstance<AppUser>();
+                AppUser user = Activator.CreateInstance<AppUser>();
+                user.FirstName = Input.FirstName;
+                user.LastName = Input.LastName; 
+                return user;
             }
             catch
             {
