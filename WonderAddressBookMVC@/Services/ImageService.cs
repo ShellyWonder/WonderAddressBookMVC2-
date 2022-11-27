@@ -6,9 +6,11 @@ namespace WonderAddressBookMVC_.Services
     {
         #region Globals
         private readonly string[] suffixes = { "Bytes", "KB", "MB", "GB", "TB", "PB" };
+        private readonly string defaultImage = "img/GirlOne_4x.png";
         #endregion
         public string ConvertByteArrayToFile(byte[] fileData, string extension)
         {
+            if (fileData is null) return defaultImage;
             try
             {
                 string imageBase64Data = Convert.ToBase64String(fileData);
