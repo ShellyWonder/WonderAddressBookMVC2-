@@ -40,15 +40,15 @@
                             <a class="nav-link text-light" asp-controller="Home" asp-action="Landing">Home</a>
                         </li>
 
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+
                         <li class="nav-item">
                             <a class="nav-link text-light" asp-area="" asp-controller="Contacts" asp-action="Index">Contacts</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-light" asp-area="" asp-controller="Categories" asp-action="Index">Categories</a>
                         </li>
-                        @if (SignInManager.IsSignedIn(User))
-                        {
-
                             <li>
                                 <form class="form-inline d-inline" asp-controller="Contacts" asp-action="SearchContacts" method="post">
                                     <div class="input-group">
