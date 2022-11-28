@@ -14,9 +14,29 @@ namespace WonderAddressBookMVC_.Services
             _context = context;
         }
 
-        public Task AddContactToCategoryAsync(int categoryId, int contactId)
+        public async Task AddContactToCategoryAsync(int categoryId, int contactId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                //ck if category is already in the contact
+                if (!await IsContactInCategory(categoryId, contactId))
+                {
+                    Contact? contact = await _context.Contacts.FindAsync(contactId);
+                    Category? category = await _context.Categories.FindAsync(categoryId);
+
+                    //accessing join tables
+                    if (category != null && contact != null)
+                    {
+                        category.Contacts.Add(contact);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
 
         public Task<ICollection<Category>> GetContactCategoriesAsync(int contactId)
@@ -31,14 +51,14 @@ namespace WonderAddressBookMVC_.Services
 
         public async Task<IEnumerable<Category>> GetUserCategoriesAsync(string userId)
         {
-           List<Category> categories = new List<Category>();
+            List<Category> categories = new List<Category>();
             try
             {
                 categories = await _context.Categories.Where(c => c.AppUserId == userId)
                                                        .OrderBy(c => c.Name)
-                                                       .ToListAsync();  
+                                                       .ToListAsync();
             }
-            catch 
+            catch
             {
 
                 throw;
@@ -46,9 +66,14 @@ namespace WonderAddressBookMVC_.Services
             return categories;
         }
 
-        public Task<bool> IsContactInCategory(int categoryId, int contactId)
+        public async Task<bool> IsContactInCategory(int categoryId, int contactId)
         {
-            throw new NotImplementedException();
+            Contact? contact = await _context.Contacts.FindAsync(contactId);
+            return await _context.Categories
+                                 .Include(c => c.Contacts)
+                                 .Where(c => c.Id == categoryId && c.Contacts.Contains(contact))
+                                 .AnyAsync();
+
         }
 
         public Task RemoveContactFromCategoryAsync(int categoryId, int contactId)
