@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using WonderAddressBookMVC_.Data;
 using WonderAddressBookMVC_.Models;
 using WonderAddressBookMVC_.Services;
+using WonderAddressBookMVC_.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +16,9 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
-
+//Custom Services
+builder.Services.AddScoped<IImageService , ImageService>(); 
+builder.Services.AddScoped<IAddressBookService,AddressBookService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -40,7 +43,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Landing}/{id?}");
 app.MapRazorPages();
 
 app.Run();
