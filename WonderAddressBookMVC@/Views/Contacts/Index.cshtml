@@ -1,6 +1,6 @@
 ﻿@using WonderAddressBookMVC_.Services.Interfaces;
 @model IEnumerable<WonderAddressBookMVC_.Models.Contact>
-@inject IImageService  _imageService;
+@inject IImageService _imageService;
 @{
     ViewData["Title"] = "Index";
 }
@@ -12,14 +12,36 @@
         <a class="glass-button ms-3" asp-controller="Contacts" asp-action="Create">CREATE NEW CONTACT</a>
     </p>
 </div>
-@foreach (var item in Model)
+@*Search fields for Contacts & categories*@
+<div class="row">
+    <div class="col-12 col-md-4 sideNav">
+        <form>
+            <div class="input-group">
+                <input class="form-control" type="search" name="searchString"
+                       placeholder="Search Term" />
+                <input type="submit" class="btn btn-outline-primary" value="Search" />
+            </div>
+        </form>
+        <form asp-action="Index" asp-controller="Contacts">
+            <div class="mt-5">
+                <label class="form-label fw-bold">CATEGORY FILTER</label>
+
+                <select name="categoryId" asp-items="@ViewBag.CategoryId" class="form-control"
+                        onchange="this.form.submit()" onfocus="this.selectedIndex=-1;this.blur();">
+                    <option>All Contacts</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+@foreach (var contact in Model)
 {
     <div class="mb-3 glass-cf-style">
         <div class="row g-0">
             <div class="col-md-4">
-                @if (item.ImageData != null)
+                @if (contact.ImageData != null)
                 {
-                    <img src="@_imageService.ConvertByteArrayToFile(item.ImageData, item.ImageType!)" class="contactList-image" alt="contact image">
+                    <img src="@_imageService.ConvertByteArrayToFile(contact.ImageData!, contact.ImageType!)" class="square-image rounded start" alt="contact image">
                 }
                 else
                 {
@@ -30,13 +52,22 @@
 
             <div class="col-md-8">
                 <div class="card-body">
-                    <h5 class="card-title"><strong>@item.FirstName @item.LastName</strong></h5>
-                    <div class="card-text"><strong>Email:</strong> @item.Email </div>
-                    <div class="card-text"><strong>Phone:</strong> @item.PhoneNumber </div>
-                    <div class="card-text"><strong>Categories:</strong>  </div>
-                    @if (@item.Categories.Count > 0)
+                    <h5 class="card-title"><strong>@contact.FullName </strong></h5>
+                    <div class="card-text"><strong>Address:</strong> @contact.Address1 </div>
+                    @if (contact.Address2 != null)
                     {
-                        @foreach (var category in item.Categories)
+                    <div class="card-text"><strong>Address:</strong> @contact.Address2 </div>
+                        
+                    }    
+                    <div class="card-text"><strong>City:</strong> @contact.City </div>
+                    <div class="card-text"><strong>State:</strong> @contact.State </div>
+                    <div class="card-text"><strong>Zip:</strong> @contact.ZipCode </div>
+                    <div class="card-text"><strong>Email:</strong> @contact.Email </div>
+                    <div class="card-text"><strong>Phone:</strong> @contact.PhoneNumber </div>
+                    <div class="card-text"><strong>Categories:</strong>  </div>
+                    @if (@contact.Categories.Count > 0)
+                    {
+                        @foreach (var category in contact.Categories)
                         {
                             <div class="form-check form-check-inline mt-1">
                                 <input type="checkbox" checked="checked" readonly class="form-check-input" name="CategoryList" value="@category.Id" />
@@ -48,17 +79,17 @@
                     {
                         <p>No category selected yet.</p>
                     }
-
-
                 </div>
             </div>
             <div class="m-3">
-                <a asp-action="Edit" asp-route-id="@item.Id" title="Edit"><i class="bi-pencil-fill"></i></a> |
-                <a asp-action="Details" asp-route-id="@item.Id" title="Details"><i class="bi-person-fill"></i></a> |
-                <a asp-action="Delete" asp-route-id="@item.Id" title="Delete"><i class="bi-trash-fill"></i></a>
+                <a asp-action="Edit" asp-route-id="@contact.Id" title="Edit"><i class="bi-pencil-fill"></i></a> |
+                @*supply route id after creating Email service*@
+                <a asp-action="Email" asp-route-id="#" title="Email"><i class="bi-envelope-fill"></i></a> |
+                <a asp-action="Details" asp-route-id="@contact.Id" title="Details"><i class="bi-person-fill"></i></a> |
+                <a asp-action="Delete" asp-route-id="@contact.Id" title="Delete"><i class="bi-trash-fill"></i></a>
             </div>
         </div>
     </div>
 
 }
-    
+

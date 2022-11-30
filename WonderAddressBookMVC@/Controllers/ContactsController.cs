@@ -34,13 +34,45 @@ namespace WonderAddressBookMVC_.Controllers
             _AddressBookService = addressBookService;
         }
         #endregion
+        #region Get Contacts
         // GET: Contacts
-        public async Task<IActionResult> Index()
+        public IActionResult Index(int categoryId)
         {
-            var applicationDbContext = _context.Contacts.Include(c => c.AppUser);
-            return View(await applicationDbContext.ToListAsync());
-        }
+            //explicit syntax
+            List<Contact> contacts = new List<Contact>();
+            string appUserId = _userManager.GetUserId(User);
 
+            //return userId & associated contacts & categories
+            AppUser appUser = _context.Users
+                                      .Include(c => c.Contacts)
+                                      .ThenInclude(c => c.Categories)
+                                      .FirstOrDefault(u => u.Id == appUserId)!;
+
+            var categories = appUser.Categories;
+
+
+            //filters contact results by category
+            if (categoryId == 0)//All contacts option from filter drop down
+            {
+
+                contacts = appUser.Contacts.OrderBy(c => c.LastName)
+                                            .ThenBy(c => c.FirstName)
+                                            .ToList();
+            }
+            else // if anything other than zero
+            {
+                contacts = appUser.Categories.FirstOrDefault(c => c.Id == categoryId)!
+                                  .Contacts.OrderBy(c => c.LastName)
+                                  .ThenBy(c => c.FirstName)
+                                        .ToList();
+            }
+
+            // bind categories to select list
+            ViewData["CategoryId"] = new SelectList(categories, "Id", "Name", categoryId);
+
+            return View(contacts);
+        }
+        #endregion
         // GET: Contacts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -74,10 +106,9 @@ namespace WonderAddressBookMVC_.Controllers
         #endregion
         #region Create Post
         // POST: Contacts/Create
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,CreatedDate,ImageFile, ")] Contact contact,List<int> CategoryList)
+        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,CreatedDate,ImageFile, ")] Contact contact, List<int> CategoryList)
         {
             //allows for the required AppUserId to be removed from the bind
             ModelState.Remove("AppUserId");
@@ -91,7 +122,7 @@ namespace WonderAddressBookMVC_.Controllers
                 {
                     contact.BirthDate = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);
                 }
-                if (contact.ImageFile !=null)
+                if (contact.ImageFile != null)
                 {
                     contact.ImageData = await _imageService.ConvertFileToByteArrayAsync(contact.ImageFile);
                     contact.ImageType = contact.ImageFile.ContentType;
