@@ -12,6 +12,7 @@ using WonderAddressBookMVC_.Services;
 using WonderAddressBookMVC_.Enums;
 using WonderAddressBookMVC_.Models;
 using WonderAddressBookMVC_.Services.Interfaces;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace WonderAddressBookMVC_.Controllers
 {
@@ -34,6 +35,7 @@ namespace WonderAddressBookMVC_.Controllers
             _AddressBookService = addressBookService;
         }
         #endregion
+
         #region Get Contacts
         // GET: Contacts
         public IActionResult Index(int categoryId)
@@ -73,6 +75,37 @@ namespace WonderAddressBookMVC_.Controllers
             return View(contacts);
         }
         #endregion
+
+        #region Get Search Contacts
+        public IActionResult SearchContacts(string searchString)
+        {
+            string appUserId = _userManager.GetUserId(User);
+            var contacts = new List<Contact>();
+            AppUser appUser = _context.Users
+                                .Include(c => c.Contacts)
+                                .ThenInclude(c => c.Categories)
+                                .FirstOrDefault(u =>u.Id == appUserId)!;
+            if (String.IsNullOrEmpty(searchString))
+            {
+                contacts = appUser.Contacts
+                                   .OrderBy(c => c.LastName)
+                                   .ThenBy(c => c.FirstName)
+                                   .ToList();
+            }
+            else
+            {
+                contacts = appUser.Contacts.Where(c =>c.FullName!.ToLower().Contains(searchString.ToLower()))
+                                   .OrderBy(c => c.LastName)
+                                   .ThenBy(c => c.FirstName)
+                                   .ToList();
+            }
+            ViewData["CategoryId"] = new SelectList(appUser.Categories, "Id", "Name", 0);
+
+            return View(nameof(Index), contacts);
+        }
+        #endregion
+
+        #region Get Contact Details
         // GET: Contacts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -91,6 +124,7 @@ namespace WonderAddressBookMVC_.Controllers
 
             return View(contact);
         }
+        #endregion
         #region Create Get
         // GET: Contacts/Create
 
@@ -104,6 +138,7 @@ namespace WonderAddressBookMVC_.Controllers
             return View();
         }
         #endregion
+
         #region Create Post
         // POST: Contacts/Create
         [HttpPost]
@@ -141,6 +176,8 @@ namespace WonderAddressBookMVC_.Controllers
 
         }
         #endregion
+
+        #region Get Contacts Edit
         // GET: Contacts/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -157,10 +194,10 @@ namespace WonderAddressBookMVC_.Controllers
             ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserId);
             return View(contact);
         }
+        #endregion
 
+        #region Post Contacts Edit
         // POST: Contacts/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,CreatedDate,ImageData,ImageType")] Contact contact)
@@ -193,7 +230,9 @@ namespace WonderAddressBookMVC_.Controllers
             ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserId);
             return View(contact);
         }
+        #endregion
 
+        #region Get Delete
         // GET: Contacts/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -212,7 +251,9 @@ namespace WonderAddressBookMVC_.Controllers
 
             return View(contact);
         }
+        #endregion
 
+        #region Post Delete
         // POST: Contacts/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
@@ -231,10 +272,13 @@ namespace WonderAddressBookMVC_.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+        #endregion
 
+        #region ContactExists
         private bool ContactExists(int id)
         {
             return _context.Contacts.Any(e => e.Id == id);
         }
+        #endregion
     }
 }
