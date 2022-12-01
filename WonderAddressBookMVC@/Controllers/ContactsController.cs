@@ -11,6 +11,7 @@ using WonderAddressBookMVC_.Data;
 using WonderAddressBookMVC_.Services;
 using WonderAddressBookMVC_.Enums;
 using WonderAddressBookMVC_.Models;
+using WonderAddressBookMVC_.Models.ViewModels;
 using WonderAddressBookMVC_.Services.Interfaces;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -103,6 +104,50 @@ namespace WonderAddressBookMVC_.Controllers
 
             return View(nameof(Index), contacts);
         }
+        #endregion
+
+        #region Get Email Contacts
+        //Get Email 
+
+
+        #endregion
+
+        #region Post Email Contacts
+        //Post Email Contacts
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EmailContact(int id)
+        {
+            string appUserId = _userManager.GetUserId(User);
+            Contact? contact = await _context.Contacts!
+                                           .Where(c => c.Id == id && c.AppUserId == appUserId)
+                                           .FirstOrDefaultAsync();
+            if (contact == null)
+            {
+                return NotFound();
+            }
+
+            //instaniating new instance of EmailData object
+            EmailData emailData = new EmailData()
+            {
+                //properties
+                EmailAddress = contact.Email!,
+                FirstName = contact.FirstName,
+                LastName = contact.LastName
+                 
+            };
+
+            //instaniating new instance of EmailData object
+            EmailContactViewModel model = new EmailContactViewModel()
+            {
+                //properties
+                Contact = contact,
+                EmailData = emailData
+            };
+            return View(model);
+        }
+
+
         #endregion
 
         #region Get Contact Details
