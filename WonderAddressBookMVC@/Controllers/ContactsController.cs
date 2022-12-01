@@ -22,7 +22,7 @@ namespace WonderAddressBookMVC_.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
         private readonly IImageService _imageService;
-        private readonly IAddressBookService _AddressBookService;
+        private readonly IAddressBookService _addressBookService;
         #region Constructor
         public ContactsController(ApplicationDbContext context,
                                     UserManager<AppUser> userManager,
@@ -32,7 +32,7 @@ namespace WonderAddressBookMVC_.Controllers
             _context = context;
             _userManager = userManager;
             _imageService = imageService;
-            _AddressBookService = addressBookService;
+            _addressBookService = addressBookService;
         }
         #endregion
 
@@ -125,6 +125,7 @@ namespace WonderAddressBookMVC_.Controllers
             return View(contact);
         }
         #endregion
+
         #region Create Get
         // GET: Contacts/Create
 
@@ -134,7 +135,7 @@ namespace WonderAddressBookMVC_.Controllers
             string appUserId = _userManager.GetUserId(User);
 
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>().ToList());
-            ViewData["CategoryList"] = new MultiSelectList(await _AddressBookService.GetUserCategoriesAsync(appUserId), "Id", "Name");
+            ViewData["CategoryList"] = new MultiSelectList(await _addressBookService.GetUserCategoriesAsync(appUserId), "Id", "Name");
             return View();
         }
         #endregion
@@ -167,7 +168,7 @@ namespace WonderAddressBookMVC_.Controllers
                 //loop over all the selected categories:
                 foreach (int categoryId in CategoryList)
                 {
-                    await _AddressBookService.AddContactToCategoryAsync(categoryId, contact.Id);
+                    await _addressBookService.AddContactToCategoryAsync(categoryId, contact.Id);
                 }
 
                 return RedirectToAction(nameof(Index));
@@ -185,13 +186,17 @@ namespace WonderAddressBookMVC_.Controllers
             {
                 return NotFound();
             }
+            string appUserId = _userManager.GetUserId(User);
 
-            var contact = await _context.Contacts.FindAsync(id);
+            var contact = await _context.Contacts.Where(c => c.Id == id && c.AppUserId == appUserId)
+                                                 .FirstOrDefaultAsync();
             if (contact == null)
             {
                 return NotFound();
             }
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserId);
+            ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>().ToList());
+            ViewData["CategoryList"] = new MultiSelectList(await _addressBookService.GetUserCategoriesAsync(appUserId), "Id", "Name", await _addressBookService.GetContactCategoryIdsAsync(contact.Id));
+
             return View(contact);
         }
         #endregion
@@ -200,7 +205,7 @@ namespace WonderAddressBookMVC_.Controllers
         // POST: Contacts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,CreatedDate,ImageData,ImageType")] Contact contact)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,CreatedDate,ImageFile,ImageData,ImageType")] Contact contact,List<int> CategoryList)
         {
             if (id != contact.Id)
             {
@@ -210,9 +215,34 @@ namespace WonderAddressBookMVC_.Controllers
             if (ModelState.IsValid)
             {
                 try
-                {
+                {   //converting time imported from views into proper format accepted by Db
+                    contact.CreatedDate = DateTime.SpecifyKind(contact.CreatedDate, DateTimeKind.Utc);
+
+                    if (contact.BirthDate != null)
+                    {
+                        contact.BirthDate = DateTime.SpecifyKind(contact.BirthDate.Value, DateTimeKind.Utc);
+
+                    }
+                    //Allowing new image upload to save to Db
+                    if (contact.ImageFile !=null)
+                    {
+                        contact.ImageData = await _imageService.ConvertFileToByteArrayAsync(contact.ImageFile);
+                        contact.ImageType = contact.ImageFile.ContentType;
+                    }
                     _context.Update(contact);
                     await _context.SaveChangesAsync();
+                    //save categories
+                    //remove current categories
+                    List<Category> oldCategories = (await _addressBookService.GetContactCategoriesAsync(contact.Id)).ToList();
+                    foreach (var category in oldCategories)
+                    {
+                        await _addressBookService.RemoveContactFromCategoryAsync(category.Id, contact.Id);
+                    }
+                    //add selected categories back to db
+                    foreach (int  categoryId in CategoryList)
+                    {
+                        await _addressBookService.AddContactToCategoryAsync(categoryId, contact.Id);
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
