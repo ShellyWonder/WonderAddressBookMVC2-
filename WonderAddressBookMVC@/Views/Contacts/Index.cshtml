@@ -56,9 +56,9 @@
                     <div class="card-text"><strong>Address:</strong> @contact.Address1 </div>
                     @if (contact.Address2 != null)
                     {
-                    <div class="card-text"><strong>Address:</strong> @contact.Address2 </div>
-                        
-                    }    
+                        <div class="card-text"><strong>Address:</strong> @contact.Address2 </div>
+
+                    }
                     <div class="card-text"><strong>City:</strong> @contact.City </div>
                     <div class="card-text"><strong>State:</strong> @contact.State </div>
                     <div class="card-text"><strong>Zip:</strong> @contact.ZipCode </div>
@@ -90,6 +90,27 @@
             </div>
         </div>
     </div>
+    @section scripts{
+    <!--Sweet Alerts-->
+    <script>
+        let message = '@(ViewBag.SwalMessage)';
 
+            if (!message.includes("Error") && message != '') {
+                Swal.fire({
+                    backdrop: false,
+                    icon: 'success',
+                    title: message,
+                    showConfirmButton: true
+                })
+            } else if (message.includes("Error")) {
+                Swal.fire({
+                    backdrop: false,
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: message
+                })
+            }
+        </script>
+    }
 }
 
