@@ -14,6 +14,7 @@ using WonderAddressBookMVC_.Models;
 using WonderAddressBookMVC_.Models.ViewModels;
 using WonderAddressBookMVC_.Services.Interfaces;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace WonderAddressBookMVC_.Controllers
 {
@@ -24,23 +25,27 @@ namespace WonderAddressBookMVC_.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly IImageService _imageService;
         private readonly IAddressBookService _addressBookService;
+        private readonly IEmailSender _emailService;
         #region Constructor
         public ContactsController(ApplicationDbContext context,
                                     UserManager<AppUser> userManager,
                                     IImageService imageService,
-                                    IAddressBookService addressBookService)
+                                    IAddressBookService addressBookService,
+                                    IEmailSender emailService)
         {
             _context = context;
             _userManager = userManager;
             _imageService = imageService;
             _addressBookService = addressBookService;
+            _emailService = emailService;
         }
         #endregion
 
-        #region Get Contacts
+        #region Get Contacts Index
         // GET: Contacts
-        public IActionResult Index(int categoryId)
+        public IActionResult Index(int categoryId, string swalMessage = null)
         {
+            ViewData["SwalMessage"] = swalMessage;
             //explicit syntax
             List<Contact> contacts = new List<Contact>();
             string appUserId = _userManager.GetUserId(User);
@@ -85,7 +90,7 @@ namespace WonderAddressBookMVC_.Controllers
             AppUser appUser = _context.Users
                                 .Include(c => c.Contacts)
                                 .ThenInclude(c => c.Categories)
-                                .FirstOrDefault(u =>u.Id == appUserId)!;
+                                .FirstOrDefault(u => u.Id == appUserId)!;
             if (String.IsNullOrEmpty(searchString))
             {
                 contacts = appUser.Contacts
@@ -95,7 +100,7 @@ namespace WonderAddressBookMVC_.Controllers
             }
             else
             {
-                contacts = appUser.Contacts.Where(c =>c.FullName!.ToLower().Contains(searchString.ToLower()))
+                contacts = appUser.Contacts.Where(c => c.FullName!.ToLower().Contains(searchString.ToLower()))
                                    .OrderBy(c => c.LastName)
                                    .ThenBy(c => c.FirstName)
                                    .ToList();
@@ -108,14 +113,6 @@ namespace WonderAddressBookMVC_.Controllers
 
         #region Get Email Contacts
         //Get Email 
-
-
-        #endregion
-
-        #region Post Email Contacts
-        //Post Email Contacts
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EmailContact(int id)
         {
             string appUserId = _userManager.GetUserId(User);
@@ -134,7 +131,7 @@ namespace WonderAddressBookMVC_.Controllers
                 EmailAddress = contact.Email!,
                 FirstName = contact.FirstName,
                 LastName = contact.LastName
-                 
+
             };
 
             //instaniating new instance of EmailData object
@@ -145,6 +142,35 @@ namespace WonderAddressBookMVC_.Controllers
                 EmailData = emailData
             };
             return View(model);
+        }
+
+
+        #endregion
+
+        #region Post Email Contacts
+        //Post Email Contacts
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EmailContact(EmailContactViewModel ecvm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    //Send email--use email service
+                    await _emailService.SendEmailAsync(ecvm.EmailData!.EmailAddress, ecvm.EmailData.Subject, ecvm.EmailData.Body);
+                    //swal msg pops up in index-success
+                    return RedirectToAction("Index", "Contacts", new {swalMessage = "Success: Email Sent"});
+                }
+                catch (Exception)
+                {
+                    //swal msg pops up in index-success fail
+                    return RedirectToAction("Index", "Contacts", new {swalMessage = "Error: Email Failed to Send"});
+
+                    throw;
+                }
+            }
+            return View(ecvm);
         }
 
 
@@ -250,7 +276,7 @@ namespace WonderAddressBookMVC_.Controllers
         // POST: Contacts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,CreatedDate,ImageFile,ImageData,ImageType")] Contact contact,List<int> CategoryList)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,CreatedDate,ImageFile,ImageData,ImageType")] Contact contact, List<int> CategoryList)
         {
             if (id != contact.Id)
             {
@@ -269,7 +295,7 @@ namespace WonderAddressBookMVC_.Controllers
 
                     }
                     //Allowing new image upload to save to Db
-                    if (contact.ImageFile !=null)
+                    if (contact.ImageFile != null)
                     {
                         contact.ImageData = await _imageService.ConvertFileToByteArrayAsync(contact.ImageFile);
                         contact.ImageType = contact.ImageFile.ContentType;
@@ -284,7 +310,7 @@ namespace WonderAddressBookMVC_.Controllers
                         await _addressBookService.RemoveContactFromCategoryAsync(category.Id, contact.Id);
                     }
                     //add selected categories back to db
-                    foreach (int  categoryId in CategoryList)
+                    foreach (int categoryId in CategoryList)
                     {
                         await _addressBookService.AddContactToCategoryAsync(categoryId, contact.Id);
                     }
