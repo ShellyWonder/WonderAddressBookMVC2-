@@ -160,12 +160,12 @@ namespace WonderAddressBookMVC_.Controllers
                     //Send email--use email service
                     await _emailService.SendEmailAsync(ecvm.EmailData!.EmailAddress, ecvm.EmailData.Subject, ecvm.EmailData.Body);
                     //swal msg pops up in index-success
-                    return RedirectToAction("Index", "Contacts", new {swalMessage = "Success: Email Sent"});
+                    return RedirectToAction("Index", "Contacts", new { swalMessage = "Success: Email Sent" });
                 }
                 catch (Exception)
                 {
                     //swal msg pops up in index-success fail
-                    return RedirectToAction("Index", "Contacts", new {swalMessage = "Error: Email Failed to Send"});
+                    return RedirectToAction("Index", "Contacts", new { swalMessage = "Error: Email Failed to Send" });
 
                     throw;
                 }
@@ -341,10 +341,10 @@ namespace WonderAddressBookMVC_.Controllers
             {
                 return NotFound();
             }
-
+            //verify authorized user
+            string AppUserId = _userManager.GetUserId(User);
             var contact = await _context.Contacts
-                .Include(c => c.AppUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                         .FirstOrDefaultAsync(c => c.Id == id && c.AppUserId == AppUserId);
             if (contact == null)
             {
                 return NotFound();
@@ -360,17 +360,14 @@ namespace WonderAddressBookMVC_.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Contacts == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Contacts'  is null.");
-            }
-            var contact = await _context.Contacts.FindAsync(id);
+            string appUserId = _userManager.GetUserId(User);
+            var contact = await _context.Contacts.FirstOrDefaultAsync(c => c.Id == id && c.AppUserId == appUserId);
             if (contact != null)
             {
                 _context.Contacts.Remove(contact);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
         #endregion
