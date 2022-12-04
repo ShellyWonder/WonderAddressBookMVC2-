@@ -24,7 +24,7 @@ namespace WonderAddressBookMVC_.Controllers
         }
         #endregion
 
-        #region Get Categories
+        #region Get Categories (Index)
         // GET: Categories
         public async Task<IActionResult> Index()
         {
@@ -35,6 +35,34 @@ namespace WonderAddressBookMVC_.Controllers
                                                  .Include(c => c.AppUser)
                                                  .ToListAsync();
             return View(categories);
+        }
+        #endregion
+
+        #region Get Categories Email Category
+        public async Task<IActionResult> EmailCategory(int Id)
+        {
+            String appUserId = _userManager.GetUserId(User);
+            Category? category = await _context.Categories
+                                              .Include(c=> c.Contacts)
+                                              .FirstOrDefaultAsync(c => c.Id == Id && c.AppUserId == appUserId);
+            //get all contacts' emails in the category belonging to User;
+            List<string?>? emails = category.Contacts
+                                           .Select(c => c.Email)
+                                           .ToList();
+
+            EmailData emailData = new EmailData()
+            {
+                GroupName = category.Name,
+                EmailAddress = String.Join(";", emails),
+                Subject = $"Group Message: {category.Name}"
+            };
+            EmailCategoryViewModel model = new EmailCategoryViewModel()
+            {
+                Contacts = category.Contacts.ToList(),
+                EmailData = emailData
+            };
+
+            return View(model);//Returns views populated w data
         }
         #endregion
 
