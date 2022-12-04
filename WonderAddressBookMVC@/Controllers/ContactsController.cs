@@ -26,6 +26,7 @@ namespace WonderAddressBookMVC_.Controllers
         private readonly IImageService _imageService;
         private readonly IAddressBookService _addressBookService;
         private readonly IEmailSender _emailService;
+
         #region Constructor
         public ContactsController(ApplicationDbContext context,
                                     UserManager<AppUser> userManager,
@@ -42,8 +43,9 @@ namespace WonderAddressBookMVC_.Controllers
         #endregion
 
         #region Get Contacts Index
+
         // GET: Contacts
-        public IActionResult Index(int categoryId, string swalMessage = null)
+        public IActionResult Index(int categoryId, string? swalMessage = null)
         {
             ViewData["SwalMessage"] = swalMessage;
             //explicit syntax
