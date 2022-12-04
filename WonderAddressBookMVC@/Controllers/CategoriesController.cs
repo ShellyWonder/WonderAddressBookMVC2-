@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WonderAddressBookMVC_.Data;
 using WonderAddressBookMVC_.Models;
+using WonderAddressBookMVC_.Models.ViewModels;
 
 namespace WonderAddressBookMVC_.Controllers
 {
@@ -15,11 +13,14 @@ namespace WonderAddressBookMVC_.Controllers
     public class CategoriesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<AppUser> _userManager;
 
         #region Constructor
-        public CategoriesController(ApplicationDbContext context)
+        public CategoriesController(ApplicationDbContext context,
+                                    UserManager<AppUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
         #endregion
 
@@ -27,8 +28,13 @@ namespace WonderAddressBookMVC_.Controllers
         // GET: Categories
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Categories.Include(c => c.AppUser);
-            return View(await applicationDbContext.ToListAsync());
+            //Get current logged in user to filter all cat. assigned to user
+            string appUserId = _userManager.GetUserId(User);
+
+            var categories = await _context.Categories.Where(c => c.AppUserId == appUserId)
+                                                 .Include(c => c.AppUser)
+                                                 .ToListAsync();
+            return View(categories);
         }
         #endregion
 
