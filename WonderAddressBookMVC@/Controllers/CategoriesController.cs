@@ -66,17 +66,17 @@ namespace WonderAddressBookMVC_.Controllers
         #region Get Categories Edit
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Categories == null)
-            {
-                return NotFound();
-            }
+            string appUserId = _userManager.GetUserId(User);
 
-            var category = await _context.Categories.FindAsync(id);
+
+            var category = await _context.Categories
+                               .Where(c =>c.Id == id && c.AppUserId == appUserId)
+                               .FirstOrDefaultAsync();
             if (category == null)
             {
                 return NotFound();
             }
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", category.AppUserId);
+            
             return View(category);
         }
         #endregion
@@ -95,6 +95,10 @@ namespace WonderAddressBookMVC_.Controllers
             {
                 try
                 {
+                    //ensures appUser only has access to edit his own categories
+                    string appUserId = _userManager.GetUserId(User);
+                    category.AppUserId = appUserId;
+
                     _context.Update(category);
                     await _context.SaveChangesAsync();
                 }
@@ -111,7 +115,6 @@ namespace WonderAddressBookMVC_.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", category.AppUserId);
             return View(category);
         }
         #endregion
