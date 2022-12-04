@@ -3,9 +3,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol;
 using WonderAddressBookMVC_.Data;
 using WonderAddressBookMVC_.Models;
 using WonderAddressBookMVC_.Models.ViewModels;
+using WonderAddressBookMVC_.Services.Interfaces;
+using WonderAddressBookMVC_.Services;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace WonderAddressBookMVC_.Controllers
 {
@@ -14,20 +18,24 @@ namespace WonderAddressBookMVC_.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
-
+        private readonly IEmailSender _emailService;
         #region Constructor
         public CategoriesController(ApplicationDbContext context,
-                                    UserManager<AppUser> userManager)
+                                    UserManager<AppUser> userManager,
+                                    IEmailSender emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
         #endregion
 
         #region Get Categories (Index)
         // GET: Categories
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? swalMessage = null)
         {
+            ViewData["Message"] = swalMessage;
+
             //Get current logged in user to filter all cat. assigned to user
             string appUserId = _userManager.GetUserId(User);
 
@@ -46,7 +54,7 @@ namespace WonderAddressBookMVC_.Controllers
                                               .Include(c=> c.Contacts)
                                               .FirstOrDefaultAsync(c => c.Id == Id && c.AppUserId == appUserId);
             //get all contacts' emails in the category belonging to User;
-            List<string?>? emails = category.Contacts
+            List<string?>? emails = category!.Contacts
                                            .Select(c => c.Email)
                                            .ToList();
 
@@ -66,6 +74,29 @@ namespace WonderAddressBookMVC_.Controllers
         }
         #endregion
 
+        #region Post Categories Email Category
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult>EmailCategory(EmailCategoryViewModel ecvm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _emailService.SendEmailAsync(ecvm.EmailData!.EmailAddress, ecvm.EmailData.Subject, ecvm.EmailData.Body);
+                    return RedirectToAction("Index", "Categories", new { swalMessage = "Success: Email Sent" });
+                }
+                catch (Exception)
+                {
+                    return RedirectToAction("Index", "Categories", new { swalMessage = "Error: Email Send Failed" });
+                    throw;
+                }
+            }
+            return View (ecvm); 
+        }
+
+        #endregion
+
         #region Get Categories Create
         // GET: Categories/Create
         public IActionResult Create()
@@ -74,7 +105,7 @@ namespace WonderAddressBookMVC_.Controllers
         }
         #endregion
 
-        #region POST: Categories/Create
+        #region POST Categories/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,AppUserId,Name")] Category category)
