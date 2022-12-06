@@ -51,7 +51,7 @@ namespace WonderAddressBookMVC_.Controllers
         {
             String appUserId = _userManager.GetUserId(User);
             Category? category = await _context.Categories
-                                              .Include(c=> c.Contacts)
+                                              .Include(c => c.Contacts)
                                               .FirstOrDefaultAsync(c => c.Id == Id && c.AppUserId == appUserId);
             //get all contacts' emails in the category belonging to User;
             List<string?>? emails = category!.Contacts
@@ -77,7 +77,7 @@ namespace WonderAddressBookMVC_.Controllers
         #region Post Categories Email Category
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult>EmailCategory(EmailCategoryViewModel ecvm)
+        public async Task<IActionResult> EmailCategory(EmailCategoryViewModel ecvm)
         {
             if (ModelState.IsValid)
             {
@@ -92,7 +92,7 @@ namespace WonderAddressBookMVC_.Controllers
                     throw;
                 }
             }
-            return View (ecvm); 
+            return View(ecvm);
         }
 
         #endregion
@@ -183,14 +183,16 @@ namespace WonderAddressBookMVC_.Controllers
         // GET: Categories/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+
             if (id == null || _context.Categories == null)
             {
                 return NotFound();
             }
 
-            var category = await _context.Categories
-                .Include(c => c.AppUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            string appUserId = _userManager.GetUserId(User);
+            var category = await _context.Categories.Where(c => c.Id == id && c.AppUserId == appUserId)
+                                                    .FirstOrDefaultAsync();
+
             if (category == null)
             {
                 return NotFound();
@@ -206,17 +208,15 @@ namespace WonderAddressBookMVC_.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Categories == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Categories'  is null.");
-            }
-            var category = await _context.Categories.FindAsync(id);
+            string appUserId = _userManager.GetUserId(User);
+
+            var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id && c.AppUserId == appUserId);
             if (category != null)
             {
                 _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
         #endregion
