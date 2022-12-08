@@ -1,23 +1,24 @@
-﻿ @model WonderAddressBookMVC_.Models.CustomError
+﻿@model WonderAddressBookMVC_.Models.CustomError
 
- @{
-     View["Title"] = "Error"
- }
+@{
+    ViewData["Title"] = "Error";
+}
 <main class="content" id="mainHero">
     <section class="container">
         <div class="d-flex flex-column justify-content-center">
             <div class="row row-cols-1">
                 <div class="col text-center">
-                    <img src="img/oops.png" alt="Page not found" class="img-fluid" />
+                    @*  //select an image*@
+                    <img src="img/black_book_pro_logo_510.png" alt="Page not found" class="img-fluid" />
                 </div>
-                <div class="col text-center display-5 my-3 fw-bold">404</div>
+                <div class="col text-center display-5 my-3 fw-bold">@Model.code</div>
                 <div class="col text-center h4">
-                    The page you are looking for might have been removed had its name
-                    changed or is temporarily unavailable.
+                    @Model.message
                 </div>
                 <div class="col text-center mt-3">
-                    <a href="index.html" class="btn btn-primary btn-lg rounded-pill">
-                        Go To Homepage<span class="fa fa-angle-right"></span>
+                    <input type="button" onclick="history.go(-1)" class="btn btn-primary btn-lg rounded-pill">
+                    Return to previous page</span>
+
                     </a>
                 </div>
             </div>
