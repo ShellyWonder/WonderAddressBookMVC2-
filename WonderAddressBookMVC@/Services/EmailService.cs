@@ -21,7 +21,8 @@ namespace WonderAddressBookMVC_.Services
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
             //create sender:
-            var emailSender = _mailSettings.Email;
+            //If local is null look in the Environment
+            var emailSender = _mailSettings.Email ?? Environment.GetEnvironmentVariable("Email");
             MimeMessage newEmail = new();
 
             newEmail.Sender = MailboxAddress.Parse(emailSender);
@@ -47,9 +48,9 @@ namespace WonderAddressBookMVC_.Services
             try
             {
                 //injected from user secrets
-                var host = _mailSettings.Host;
-                var port = _mailSettings.Port;
-                var password = _mailSettings.Password;
+                var host = _mailSettings.Host ?? Environment.GetEnvironmentVariable("Host");
+                var port = _mailSettings.Port !=0 ? _mailSettings.Port: int.Parse (Environment.GetEnvironmentVariable("Port")!);
+                var password = _mailSettings.Password ?? Environment.GetEnvironmentVariable("Password");
 
                 //sending email with SecureSocketOptions (encryption):
                 await smtpClient.ConnectAsync(host, port, SecureSocketOptions.StartTls);
