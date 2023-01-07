@@ -46,9 +46,10 @@ namespace WonderAddressBookMVC_.Services
             using SmtpClient smtpClient = new();
 
             try
-            {
+            {   //may need to change environment variables to accomodate Railway hosting
                 //injected from user secrets
                 var host = _mailSettings.Host ?? Environment.GetEnvironmentVariable("Host");
+                //port must be int not string-- hence, int.parse is used
                 var port = _mailSettings.Port !=0 ? _mailSettings.Port: int.Parse (Environment.GetEnvironmentVariable("Port")!);
                 var password = _mailSettings.Password ?? Environment.GetEnvironmentVariable("Password");
 

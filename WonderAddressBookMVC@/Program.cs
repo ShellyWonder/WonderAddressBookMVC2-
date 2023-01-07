@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Common;
 using WonderAddressBookMVC_.Data;
 using WonderAddressBookMVC_.Models;
 using WonderAddressBookMVC_.Services;
@@ -20,10 +21,15 @@ builder.Services.AddControllersWithViews();
 //Custom Services
 builder.Services.AddScoped<IImageService , ImageService>(); 
 builder.Services.AddScoped<IAddressBookService,AddressBookService>();
+builder.Services.AddScoped<DataService>();
 //email functionality
 builder.Services.AddScoped<IEmailSender, EmailService>();
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+
 var app = builder.Build();
+var scope = app.Services.CreateScope();
+//syncs db with migrations
+await scope.ServiceProvider.GetRequiredService<DataService>().ManageDataAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
