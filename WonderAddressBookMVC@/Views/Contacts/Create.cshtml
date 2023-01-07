@@ -94,16 +94,7 @@
                         <label asp-for="Categories" class="control-label">Delete or Add Categories</label>
                         <select name="CategoryList" class="form-select" asp-items="@ViewBag.CategoryList" multiple></select>
                     </div>
-                    <div class="col-12 d-flex justify-content-start form-group">
-                        @foreach (var category in Model!.Categories)
-                        {
-                            <div class=" col col-lg-6 form-check form-check-inline">
-                                <input type="checkbox" checked="checked" readonly class="form-check-input" name="CategoryList" value="@category.Id" />
-                                <label class="form-check-label" for="CategoryList">@category.Name</label>
-                            </div>
-                        }
-                    </div>
-
+                    
                     <div class="col-12 d-flex justify-content-end mt-2">
                         <button type="submit" asp-action="Create" asp-controller="Contacts" class="w-100 btn btn-lg glass-button">Save</button>
                     </div>
