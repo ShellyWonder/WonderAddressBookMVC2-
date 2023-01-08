@@ -29,7 +29,7 @@ body {
 
 /*--Button Overrides --*/
 /*-- Button styles override Bootstrap Styles --*/
-.btn-outline-primary {
+/*btn-outline-primary {
     color: var(--cf-dark-color);
     border-color: var(--cf-primaryColor) !important;
 }
@@ -61,7 +61,7 @@ body {
 .btnlinks {
     width: 7rem;
 }
-
+*/
 nav {
     background-color: var(--cf-primaryColorLight)
 }
@@ -107,12 +107,12 @@ h6 {
     font-size: 1.5rem;
 }
 
-.pageHeader {
+/*.pageHeader {
     background-color: var(--cf-secondaryColor);
     padding-top: 7.5rem;
     padding-bottom: 2.5rem;
 }
-
+*/
 .pageTitle {
     font-family: var(--cf-title-font);
     font-weight: 500;
@@ -130,7 +130,7 @@ h6 {
     border-color: var(--cf-light-color);
     border-style: solid;
     border-width: 3px;
-    background-color: var(--cf-secondaryColor);
+    background-color: var(--cf-dark-color);
     padding-top: 2rem;
     padding-bottom: 2rem;
     padding-left: 1rem;
@@ -158,8 +158,8 @@ h6 {
 
 .footer {
     flex-shrink: 0;
-    background-color: var(--cf-secondaryColor);
-}
+/*    background-color: var(--cf-dark-color);
+*/}
 
 .copyright {
     color: var(--cf-primaryColorDark);
