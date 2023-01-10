@@ -24,6 +24,8 @@ namespace WonderAddressBookMVC_.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+
         ////Route matches route in program.cs 
         //[Route("/Home/HandleError/{code:int}")]
         //public IActionResult HandleError(int code)
@@ -39,7 +41,7 @@ namespace WonderAddressBookMVC_.Controllers
         //        customError.message = "Sorry something went wrong.";
         //    }
 
-        //    return View("~/Views/Shared/Error.cshtml",customError);
+        //    return View("~/Views/Shared/Error.cshtml", customError);
         //}
     }
 }
