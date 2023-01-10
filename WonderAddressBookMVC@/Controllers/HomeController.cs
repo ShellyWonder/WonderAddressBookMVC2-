@@ -18,22 +18,28 @@ namespace WonderAddressBookMVC_.Controllers
             return View();
         }
 
-        //Route matches route in program.cs 
-        [Route("/Home/HandleError/{code:int}")]
-        public IActionResult HandleError(int code)
-        {
-            var customError = new CustomError();
-            customError.code = code;
-            if (code == 404)
-            {
-                customError.message = "Oops . . .Page not found.";
-            }
-            else
-            {
-                customError.message = "Sorry something went wrong.";
-            }
 
-            return View("~/Views/Shared/CustomError.cshtml",customError);
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+        ////Route matches route in program.cs 
+        //[Route("/Home/HandleError/{code:int}")]
+        //public IActionResult HandleError(int code)
+        //{
+        //    var customError = new CustomError();
+        //    customError.code = code;
+        //    if (code == 404)
+        //    {
+        //        customError.message = "Oops . . .Page not found.";
+        //    }
+        //    else
+        //    {
+        //        customError.message = "Sorry something went wrong.";
+        //    }
+
+        //    return View("~/Views/Shared/Error.cshtml",customError);
+        //}
     }
 }
